@@ -62,17 +62,19 @@ class _PantallaDetalleReporteState extends State<PantallaDetalleReporte> {
     try {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('No se pudo abrir WhatsApp')),
         );
+      }
     }
   }
 
   // NUEVA FUNCIÓN: Enviar un mensaje al chat
   Future<void> _enviarMensaje(bool esAdministrador) async {
-    if (_mensajeController.text.trim().isEmpty)
+    if (_mensajeController.text.trim().isEmpty) {
       return; // No enviar mensajes vacíos
+    }
 
     final textoMensaje = _mensajeController.text.trim();
     _mensajeController
@@ -85,10 +87,11 @@ class _PantallaDetalleReporteState extends State<PantallaDetalleReporte> {
         'es_admin': esAdministrador,
       });
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Error al enviar el mensaje')),
         );
+      }
     }
   }
 
@@ -247,10 +250,11 @@ class _PantallaDetalleReporteState extends State<PantallaDetalleReporte> {
                               .eq('reporte_id', widget.reporte['id'])
                               .order('created_at', ascending: true),
                           builder: (context, snapshot) {
-                            if (!snapshot.hasData)
+                            if (!snapshot.hasData) {
                               return const Center(
                                 child: CircularProgressIndicator(),
                               );
+                            }
                             final comentarios =
                                 snapshot.data as List<Map<String, dynamic>>;
 
