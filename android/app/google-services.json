@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "975679188574",
+    "project_id": "denuncias-municipales-cd780",
+    "storage_bucket": "denuncias-municipales-cd780.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:975679188574:android:3cae76793576d3a339cecf",
+        "android_client_info": {
+          "package_name": "com.example.denuncias_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDYOJeG21FOLFyos2qSiq3wzwlqN6MJ9Fg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
