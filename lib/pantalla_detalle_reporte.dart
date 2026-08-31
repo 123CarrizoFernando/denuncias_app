@@ -256,11 +256,24 @@ class _PantallaDetalleReporteState extends State<PantallaDetalleReporte> {
                               .eq('reporte_id', widget.reporte['id'])
                               .order('created_at', ascending: true),
                           builder: (context, snapshot) {
+                            // 1. AGREGAMOS ESTO POR SI HAY UN ERROR (EJ: REALTIME APAGADO)
+                            if (snapshot.hasError) {
+                              return Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Text(
+                                  'Error al leer chat: ${snapshot.error}',
+                                  style: const TextStyle(color: Colors.red),
+                                ),
+                              );
+                            }
+
+                            // 2. LA RUEDITA MIENTRAS CARGA LOS DATOS
                             if (!snapshot.hasData) {
                               return const Center(
                                 child: CircularProgressIndicator(),
                               );
                             }
+
                             final comentarios =
                                 snapshot.data as List<Map<String, dynamic>>;
 
