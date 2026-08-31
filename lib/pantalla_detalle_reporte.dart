@@ -88,8 +88,14 @@ class _PantallaDetalleReporteState extends State<PantallaDetalleReporte> {
       });
     } catch (e) {
       if (mounted) {
+        // Ahora la barrita nos va a mostrar el error exacto que tira la base de datos
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error al enviar el mensaje')),
+          SnackBar(
+            content: Text('Error: $e'),
+            duration: const Duration(
+              seconds: 5,
+            ), // Le damos más tiempo para leerlo
+          ),
         );
       }
     }
