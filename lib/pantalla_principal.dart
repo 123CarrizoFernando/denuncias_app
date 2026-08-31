@@ -6,8 +6,17 @@ import 'pantalla_mapa.dart';
 import 'pantalla_detalle_reporte.dart';
 import 'pantalla_estadisticas.dart';
 
-class PantallaPrincipal extends StatelessWidget {
+class PantallaPrincipal extends StatefulWidget {
   const PantallaPrincipal({super.key});
+
+  @override
+  State<PantallaPrincipal> createState() => _PantallaPrincipalState();
+}
+
+class _PantallaPrincipalState extends State<PantallaPrincipal> {
+  // Esta variable es el "cerebro" web: recuerda qué sección estamos mirando
+  // 0: Tabla de Reportes | 1: Estadísticas | 2: Mapa
+  int _vistaWebActual = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -16,13 +25,10 @@ class PantallaPrincipal extends StatelessWidget {
     final nombre = usuario?.userMetadata?['nombre'] ?? 'Vecino';
     final esAdministrador = usuario?.email == 'admin@muni.com';
 
-    // 1. EL DETECTOR DE PANTALLAS: Preguntamos cuánto mide la pantalla
+    // Detector de pantallas
     final anchoPantalla = MediaQuery.of(context).size.width;
-    final esPC =
-        anchoPantalla >
-        800; // Si tiene más de 800px, asumimos que es una computadora
+    final esPC = anchoPantalla > 800;
 
-    // 2. LA DECISIÓN: ¿Mostramos la vista de PC o la de Celular?
     if (esPC && esAdministrador) {
       return _construirVistaWeb(context, supabase, nombre);
     } else {
@@ -37,7 +43,7 @@ class PantallaPrincipal extends StatelessWidget {
   }
 
   // =====================================================================
-  // VISTA PARA COMPUTADORAS (Panel de Control Profesional con Tabla)
+  // VISTA WEB (SPA - Sin cambiar de pantalla)
   // =====================================================================
   Widget _construirVistaWeb(
     BuildContext context,
@@ -47,7 +53,7 @@ class PantallaPrincipal extends StatelessWidget {
     return Scaffold(
       body: Row(
         children: [
-          // MENÚ LATERAL IZQUIERDO (SIDEBAR)
+          // MENÚ LATERAL IZQUIERDO
           Container(
             width: 250,
             color: Theme.of(context).colorScheme.inversePrimary,
@@ -56,46 +62,50 @@ class PantallaPrincipal extends StatelessWidget {
                 const SizedBox(height: 40),
                 const Icon(Icons.location_city, size: 80, color: Colors.white),
                 const SizedBox(height: 16),
-                Text(
+                const Text(
                   'Municipio\nPanel Admin',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
                   ),
                 ),
                 const SizedBox(height: 40),
+
+                // BOTÓN 1: REPORTES
                 ListTile(
                   leading: const Icon(Icons.list_alt),
                   title: const Text(
                     'Reportes',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  selected: true,
-                  selectedTileColor: Colors.white.withValues(alpha: 0.2),
-                  onTap: () {}, // Ya estamos acá
+                  selected: _vistaWebActual == 0,
+                  selectedTileColor: Colors.white.withOpacity(0.2),
+                  onTap: () =>
+                      setState(() => _vistaWebActual = 0), // Cambia la vista
                 ),
+
+                // BOTÓN 2: ESTADÍSTICAS
                 ListTile(
                   leading: const Icon(Icons.bar_chart),
                   title: const Text('Estadísticas'),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const PantallaEstadisticas(),
-                    ),
-                  ),
+                  selected: _vistaWebActual == 1,
+                  selectedTileColor: Colors.white.withOpacity(0.2),
+                  onTap: () =>
+                      setState(() => _vistaWebActual = 1), // Cambia la vista
                 ),
+
+                // BOTÓN 3: MAPA
                 ListTile(
                   leading: const Icon(Icons.map),
                   title: const Text('Mapa Interactivo'),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const PantallaMapa(),
-                    ),
-                  ),
+                  selected: _vistaWebActual == 2,
+                  selectedTileColor: Colors.white.withOpacity(0.2),
+                  onTap: () =>
+                      setState(() => _vistaWebActual = 2), // Cambia la vista
                 ),
+
                 const Spacer(),
                 const Divider(),
                 ListTile(
@@ -108,171 +118,152 @@ class PantallaPrincipal extends StatelessWidget {
             ),
           ),
 
-          // CONTENIDO PRINCIPAL DERECHO (LA TABLA DE DATOS)
+          // CONTENIDO PRINCIPAL DERECHO (Depende de qué botón se tocó)
+          Expanded(child: _construirContenidoDerechoWeb(supabase, nombre)),
+        ],
+      ),
+    );
+  }
+
+  // Acá decidimos qué "pieza" poner en la parte derecha de la pantalla
+  Widget _construirContenidoDerechoWeb(SupabaseClient supabase, String nombre) {
+    if (_vistaWebActual == 1) return const PantallaEstadisticas();
+    if (_vistaWebActual == 2) return const PantallaMapa();
+
+    // Si es 0, mostramos la Tabla de Reportes
+    return Container(
+      color: Colors.grey[100],
+      padding: const EdgeInsets.all(32.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Hola, $nombre',
+            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+          ),
+          const Text(
+            'Gestión de denuncias ciudadanas',
+            style: TextStyle(fontSize: 16, color: Colors.grey),
+          ),
+          const SizedBox(height: 24),
           Expanded(
-            child: Container(
-              color: Colors.grey[100],
-              padding: const EdgeInsets.all(32.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Hola, $nombre',
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Text(
-                    'Gestión de denuncias ciudadanas',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 24),
+            child: Card(
+              elevation: 4,
+              clipBehavior: Clip.antiAlias,
+              child: StreamBuilder(
+                stream: supabase
+                    .from('reportes')
+                    .stream(primaryKey: ['id'])
+                    .order('id', ascending: false),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData)
+                    return const Center(child: CircularProgressIndicator());
+                  final reportes = snapshot.data as List<Map<String, dynamic>>;
 
-                  // LA TABLA CON LOS REPORTES
-                  Expanded(
-                    child: Card(
-                      elevation: 4,
-                      clipBehavior: Clip.antiAlias,
-                      child: StreamBuilder(
-                        stream: supabase
-                            .from('reportes')
-                            .stream(primaryKey: ['id'])
-                            .order('id', ascending: false),
-                        builder: (context, snapshot) {
-                          if (!snapshot.hasData) {
-                            return const Center(
-                              child: CircularProgressIndicator(),
-                            );
-                          }
-                          final reportes =
-                              snapshot.data as List<Map<String, dynamic>>;
-
-                          return SingleChildScrollView(
-                            scrollDirection: Axis.vertical,
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal, // Permite scrollear a los lados si la tabla es muy ancha
-                              child: DataTable(
-                                headingRowColor: WidgetStateProperty.all(
-                                  Colors.grey[200],
-                                ),
-                                columns: const [
-                                  DataColumn(
-                                    label: Text(
-                                      'ID',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    label: Text(
-                                      'Categoría',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    label: Text(
-                                      'Ubicación',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    label: Text(
-                                      'Estado',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    label: Text(
-                                      'Acción',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                                rows: reportes.map((reporte) {
-                                  final estado =
-                                      reporte['estado'] ?? 'Pendiente';
-                                  Color colorEstado = estado == 'Resuelto'
-                                      ? Colors.green
-                                      : (estado == 'En progreso'
-                                            ? Colors.blue
-                                            : Colors.orange);
-
-                                  return DataRow(
-                                    cells: [
-                                      DataCell(
-                                        Text(
-                                          '#${reporte['id'].toString().substring(0, 4)}...',
-                                        ),
-                                      ),
-                                      DataCell(
-                                        Text(reporte['categoria'] ?? '-'),
-                                      ),
-                                      DataCell(
-                                        Text(
-                                          reporte['ubicacion'] ?? '-',
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      DataCell(
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 4,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: colorEstado.withValues(
-                                              alpha: 0.2,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            estado.toUpperCase(),
-                                            style: TextStyle(
-                                              color: colorEstado,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      DataCell(
-                                        ElevatedButton(
-                                          onPressed: () => Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  PantallaDetalleReporte(
-                                                    reporte: reporte,
-                                                  ),
-                                            ),
-                                          ),
-                                          child: const Text('Ver detalle'),
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                }).toList(),
-                              ),
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.vertical,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: DataTable(
+                        headingRowColor: WidgetStateProperty.all(
+                          Colors.grey[200],
+                        ),
+                        columns: const [
+                          DataColumn(
+                            label: Text(
+                              'ID',
+                              style: TextStyle(fontWeight: FontWeight.bold),
                             ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Categoría',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Ubicación',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Estado',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Acción',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                        rows: reportes.map((reporte) {
+                          final estado = reporte['estado'] ?? 'Pendiente';
+                          Color colorEstado = estado == 'Resuelto'
+                              ? Colors.green
+                              : (estado == 'En progreso'
+                                    ? Colors.blue
+                                    : Colors.orange);
+
+                          return DataRow(
+                            cells: [
+                              DataCell(
+                                Text(
+                                  '#${reporte['id'].toString().substring(0, 4)}...',
+                                ),
+                              ),
+                              DataCell(Text(reporte['categoria'] ?? '-')),
+                              DataCell(
+                                Text(
+                                  reporte['ubicacion'] ?? '-',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              DataCell(
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: colorEstado.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    estado.toUpperCase(),
+                                    style: TextStyle(
+                                      color: colorEstado,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                ElevatedButton(
+                                  onPressed: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          PantallaDetalleReporte(
+                                            reporte: reporte,
+                                          ),
+                                    ),
+                                  ),
+                                  child: const Text('Ver detalle'),
+                                ),
+                              ),
+                            ],
                           );
-                        },
+                        }).toList(),
                       ),
                     ),
-                  ),
-                ],
+                  );
+                },
               ),
             ),
           ),
@@ -282,7 +273,7 @@ class PantallaPrincipal extends StatelessWidget {
   }
 
   // =====================================================================
-  // VISTA PARA CELULARES (El código que ya teníamos)
+  // VISTA MÓVIL (Con navegación normal, se mantiene intacta)
   // =====================================================================
   Widget _construirVistaMovil(
     BuildContext context,
@@ -335,15 +326,13 @@ class PantallaPrincipal extends StatelessWidget {
                   .eq('usuario_id', userId)
                   .order('id', ascending: false),
         builder: (context, snapshot) {
-          if (!snapshot.hasData) {
+          if (!snapshot.hasData)
             return const Center(child: CircularProgressIndicator());
-          }
           final reportes = snapshot.data as List<Map<String, dynamic>>;
-          if (reportes.isEmpty) {
+          if (reportes.isEmpty)
             return const Center(
               child: Text('Todavía no tenés reportes. ¡Creá el primero!'),
             );
-          }
 
           return ListView.builder(
             padding: const EdgeInsets.all(16),
@@ -362,7 +351,7 @@ class PantallaPrincipal extends StatelessWidget {
                 child: ListTile(
                   contentPadding: const EdgeInsets.all(16),
                   leading: CircleAvatar(
-                    backgroundColor: colorEstado.withValues(alpha: 0.2),
+                    backgroundColor: colorEstado.withOpacity(0.2),
                     radius: 25,
                     child: Icon(
                       Icons.report_problem,
@@ -423,7 +412,6 @@ class PantallaPrincipal extends StatelessWidget {
       floatingActionButton: esAdministrador
           ? null
           : FloatingActionButton.extended(
-              // Ocultamos el FAB al admin
               onPressed: () => Navigator.push(
                 context,
                 MaterialPageRoute(
